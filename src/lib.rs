@@ -727,3 +727,23 @@ impl GenerateBacktrace for Backtrace {
         Some(self)
     }
 }
+
+/// TODO: Premade for you!
+pub mod whatever {
+    use crate::{Backtrace, Snafu};
+
+    #[derive(Debug, Snafu)]
+    #[snafu(crate_root(crate))]
+    #[snafu(other)]
+    #[snafu(display("{}", message))]
+    /// TODO: Premade for you!
+    pub struct Error {
+        #[snafu(source(from(Box<dyn std::error::Error>, Some)))]
+        source: Option<Box<dyn std::error::Error>>,
+        message: String,
+        backtrace: Backtrace,
+    }
+
+    /// TODO: Premade for you!
+    pub type Result<T, E = Error> = std::result::Result<T, E>;
+}
