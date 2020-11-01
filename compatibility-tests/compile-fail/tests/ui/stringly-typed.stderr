@@ -2,7 +2,7 @@ error: Cannot be both a `context` and `other` error
  --> $DIR/stringly-typed.rs:5:13
   |
 5 |     #[snafu(context, other)]
-  |             ^^^^^^^^^^^^^^
+  |             ^^^^^^^
 
 error: Cannot be both a `context` and `other` error
  --> $DIR/stringly-typed.rs:5:22
@@ -10,11 +10,11 @@ error: Cannot be both a `context` and `other` error
 5 |     #[snafu(context, other)]
   |                      ^^^^^
 
-error: `snafu(other)` has no arguments
-  --> $DIR/stringly-typed.rs:13:13
+error: expected `,`
+  --> $DIR/stringly-typed.rs:13:18
    |
 13 |     #[snafu(other(true))]
-   |             ^^^^^
+   |                  ^^^^^^
 
 error: Other selectors must have a message field
   --> $DIR/stringly-typed.rs:21:5
