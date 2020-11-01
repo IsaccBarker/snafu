@@ -204,6 +204,35 @@ macro_rules! ensure {
     };
 }
 
+/// Instantiate a stringly-typed error message.
+///
+/// ```rust
+/// todo!("What name?")
+/// ```
+#[macro_export]
+macro_rules! snafux {
+    ($fmt:literal$(, $($arg:expr),* $(,)?)?) => {
+        return core::result::Result::Err({
+            $crate::FromString::without_source(
+                format!($fmt$(, $($arg),*)?),
+            )
+        });
+    };
+    ($source:expr, $fmt:literal$(, $($arg:expr),* $(,)?)?) => {
+        match $source {
+            core::result::Result::Ok(v) => v,
+            core::result::Result::Err(e) => {
+                return core::result::Result::Err({
+                    $crate::FromString::with_source(
+                        core::convert::Into::into(e),
+                        format!($fmt$(, $($arg),*)?),
+                    )
+                });
+            }
+        }
+    };
+}
+
 /// Additions to [`Result`](std::result::Result).
 pub trait ResultExt<T, E>: Sized {
     /// Extend a [`Result`]'s error with additional context-sensitive information.
@@ -285,6 +314,15 @@ pub trait ResultExt<T, E>: Sized {
         C: IntoError<E2, Source = E>,
         E2: Error + ErrorCompat;
 
+    /// TODO: option context?
+    /// TODO: future context?
+    fn other_context<F, S, E2>(self, f: F) -> Result<T, E2>
+    where
+        F: FnOnce(&E) -> S,
+        S: Into<String>,
+        E2: FromString,
+        E: Into<E2::Source>;
+
     #[doc(hidden)]
     #[deprecated(since = "0.4.0", note = "use ResultExt::context instead")]
     fn eager_context<C, E2>(self, context: C) -> Result<T, E2>
@@ -325,6 +363,19 @@ impl<T, E> ResultExt<T, E> for Result<T, E> {
         self.map_err(|error| {
             let context = context();
             context.into_error(error)
+        })
+    }
+
+    fn other_context<F, S, E2>(self, f: F) -> Result<T, E2>
+    where
+        F: FnOnce(&E) -> S,
+        S: Into<String>,
+        E2: FromString,
+        E: Into<E2::Source>,
+    {
+        self.map_err(|e| {
+            let string_context = f(&e);
+            FromString::with_source(e.into(), string_context.into())
         })
     }
 }
@@ -588,6 +639,21 @@ where
 
     /// Combine the information to produce the error
     fn into_error(self, source: Self::Source) -> E;
+}
+
+/// Takes a string message and builds the corresponding error.
+///
+/// It is expected that most users of SNAFU will not directly interact
+/// with this trait.
+pub trait FromString {
+    /// The underlying error
+    type Source;
+
+    /// Create a brand new error from the given string
+    fn without_source(message: String) -> Self;
+
+    /// Wrap an existing error with the given string
+    fn with_source(source: Self::Source, message: String) -> Self;
 }
 
 /// Construct a backtrace, allowing it to be optional.

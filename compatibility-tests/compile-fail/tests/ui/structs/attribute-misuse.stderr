@@ -1,4 +1,4 @@
-error: expected `display`, `visibility`, `source`, `backtrace`, `context`, or `crate_root`
+error: expected `display`, `visibility`, `source`, `backtrace`, `context`, `other`, or `crate_root`
  --> $DIR/attribute-misuse.rs:5:13
   |
 5 |     #[snafu(unknown_attribute)]
